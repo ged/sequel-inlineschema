@@ -326,13 +326,73 @@ describe Sequel::Plugins::InlineSchema do
 
 		it "calls a hook after table creation" do
 			def model_class.after_create_table
-				self.called[ :after_create_table ] = true
 				super
+				self.called[ :after_create_table ] = true
 			end
 
 			model_class.create_table
 
 			expect( model_class.called ).to include( :after_create_table )
+		end
+
+
+		it "calls a hook before dropping the model's table" do
+			def model_class.before_drop_table
+				self.called[ :before_drop_table ] = true
+				super
+			end
+
+			model_class.drop_table
+
+			expect( model_class.called ).to include( :before_drop_table )
+		end
+
+
+		it "allows cancellation of drop_table from the before_drop_table hook" do
+			def model_class.before_drop_table
+				self.called[ :before_drop_table ] = true
+				cancel_action
+			end
+
+			expect {
+				model_class.drop_table
+			}.to raise_error( Sequel::HookFailed, /hook failed/i )
+		end
+
+
+		it "allows cancellation of drop_table with a message from the before_drop_table hook" do
+			def model_class.before_drop_table
+				self.called[ :before_drop_table ] = true
+				cancel_action( "Wait, don't drop yet!" )
+			end
+
+			expect {
+				model_class.drop_table
+			}.to raise_error( Sequel::HookFailed, "Wait, don't drop yet!" )
+		end
+
+
+		it "allows cancellation of drop_table with a Symbol from the before_drop_table hook" do
+			def model_class.before_drop_table
+				self.called[ :before_drop_table ] = true
+				cancel_action( :before_drop_table )
+			end
+
+			expect {
+				model_class.drop_table
+			}.to raise_error( Sequel::HookFailed, /before_drop_table/ )
+		end
+
+
+		it "calls a hook after a class's table is dropped" do
+			def model_class.after_drop_table
+				super
+				self.called[ :after_drop_table ] = true
+			end
+
+			model_class.drop_table
+
+			expect( model_class.called ).to include( :after_drop_table )
 		end
 
 	end

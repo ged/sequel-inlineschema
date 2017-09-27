@@ -56,16 +56,44 @@ require 'sequel'
 #
 #     end
 #
-# A model with an inline schema has several methods for creating/dropping its
+# ## Notable Model Methods
+#
+# See Sequel::Plugins::InlineSchema::ClassMethods for documentation for the methods the
+# plugin adds to your model class/es.
+#
+# Of particular note:
+#
+# A model class with an inline schema has several methods for creating/dropping its
 # associated table:
 #
+# * create_table
+# * create_table!
+# * create_table?
+# * table_exists?
+# * drop_table
+# * drop_table?
 #
+# If you use it with an abstract base class, you can ask the base class which of
+# its subclasses need their tables created:
+#
+# * uninstalled_tables
+#
+# It can also define hooks for creating and dropping the table:
+#
+# * before_create_table
+# * after_create_table
+# * before_drop_table
+# * after_drop_table
+#
+# As with other Sequel
+# [model hooks](http://sequel.jeremyevans.net/rdoc/files/doc/model_hooks_rdoc.html),
+# you can prevent the action from the `before_*` hooks by calling `cancel_action`.
 module Sequel::Plugins::InlineSchema
 
 
 	### Sequel plugin API -- called the first time the plugin is loaded for this
 	### +model+.
-	def self::apply( model, *args )
+	def self::apply( model, *args ) # :nodoc:
 		model.plugin( :subclasses ) # track subclasses
 		model.extend( TSort )
 		model.require_valid_table = false
@@ -114,13 +142,27 @@ module Sequel::Plugins::InlineSchema
 
 		### Drops table. If the table doesn't exist, this will probably raise an error.
 		def drop_table
+			self.before_drop_table
 			self.db.drop_table( self.table_name )
+			self.after_drop_table
 		end
 
 
 		### Drops table if it already exists, do nothing if it doesn't exist.
 		def drop_table?
 			self.db.drop_table?( self.table_name )
+		end
+
+
+		### Called before the table is dropped.
+		def before_drop_table
+			# No-op
+		end
+
+
+		### Called after the table is dropped.
+		def after_drop_table
+			# No-op
 		end
 
 
