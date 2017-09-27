@@ -1,0 +1,16 @@
+.document
+.editorconfig
+.rdoc_options
+.simplecov
+ChangeLog
+History.md
+LICENSE.txt
+Manifest.txt
+README.md
+Rakefile
+lib/sequel/inline_schema.rb
+lib/sequel/plugins/inline_migrations.rb
+lib/sequel/plugins/inline_schema.rb
+spec/sequel/plugins/inline_migrations_spec.rb
+spec/sequel/plugins/inline_schema_spec.rb
+spec/spec_helper.rb
