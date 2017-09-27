@@ -6,8 +6,9 @@ require 'sequel/model'
 Sequel.extension( :migration )
 
 
-# A plugin for Sequel::Model that allows migrations for the model to be defined directly
-# in the class declaration.
+# A plugin for Sequel::Model that allows migrations for the model to be defined
+# directly in the class declaration. It uses the `inline_schema` plugin
+# internally, and will add it for you if necessary.
 #
 # == Example
 #
@@ -17,6 +18,9 @@ Sequel.extension( :migration )
 #   module Acme
 #       Model = Class.new( Sequel::Model )
 #       Model.def_Model( Acme )
+#
+#       plugin :inline_schema
+#       plugin :inline_migrations
 #   end
 #
 # Defining a model class with two migrations:
@@ -75,9 +79,6 @@ Sequel.extension( :migration )
 #
 #   puts "Creating new tables, applying any pending migrations..."
 #   Acme::Model.migrate
-#
-#   puts "Running pending migrations..."
-#   Sequel::Plugins::InlineMigrations::Migrator.run( Sequel::Model )
 #
 module Sequel::Plugins::InlineMigrations
 

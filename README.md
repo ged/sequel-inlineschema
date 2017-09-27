@@ -15,14 +15,23 @@ docs
 
 ## Description
 
-This is a plugin for declaring a model's table schema inline with the class
-itself, similar to the legacy `schema` plugin.
+This is a set of plugins for Sequel for declaring a model's table schema and
+any migrations in the class itself (similar to the legacy `schema` plugin).
+
+It has only really been tested with PostgreSQL, but patches that make it more generic are welcomed.
+
+The two plugins are:
+
+* Sequel::Plugins::InlineSchema
+* Sequel::Plugins::InlineMigrations
+
+Examples and usage documentation are included there.
 
 
 ## Prerequisites
 
-* Ruby
-* Sequel >= 4.45
+* Ruby >= 2.3
+* Sequel >= 5.0
 
 
 ## Installation

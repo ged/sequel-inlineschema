@@ -10,15 +10,55 @@ require 'sequel'
 # similar to Database#create_table), and use Model.create_table to create a
 # table using the schema information.
 #
-# Usage:
+# The inline schema is declared either by calling `set_schema` on the class or
+# passing a schema-declaration block to the `create_table` method.
 #
-#	 # Add the schema methods to all model subclasses
-#	 Sequel::Model.plugin :inline_schema
+# ## Usage
 #
-#	 # Add the schema methods to the Album class
-#	 Album.plugin :inline_schema
-#    Album.set_schema { ... }
-#    Album.create_table?
+# There are several ways to use this plugin.
+#
+# Add the schema methods to all model subclasses:
+#
+#     Sequel::Model.plugin :inline_schema
+#
+# Add the schema methods to a particular class:
+#
+#     Album.plugin :inline_schema
+#     Album.set_schema { ... }
+#     Album.create_table?
+#
+# Add the schema methods to an abstract base class:
+#
+#     # lib/acme/model.rb
+#     require 'sequel'
+#     require 'acme'
+#
+#     module ACME
+#         Model = Class.new( Sequel::Model )
+#         Model.def_Model( ACME )
+#
+#         class Model
+#             plugin :inline_schema
+#         end
+#     end
+#
+#     # lib/acme/product.rb
+#     require 'acme/model'
+#
+#     class ACME::Product < ACME::Model( :products )
+#
+#         set_schema do
+#             primary_key :id
+#             String :sku, null: false
+#             String :name, null: false
+#             ...
+#         end
+#
+#     end
+#
+# A model with an inline schema has several methods for creating/dropping its
+# associated table:
+#
 #
 module Sequel::Plugins::InlineSchema
 
@@ -84,9 +124,7 @@ module Sequel::Plugins::InlineSchema
 		end
 
 
-		### Returns table schema created with set_schema for direct descendant of Model.
-		### Does not retrieve schema information from the database, see db_schema if you
-		### want that.
+		### Returns the table schema created with set_schema.
 		def schema
 			if !@schema && @schema_block
 				self.set_dataset( self.db[@schema_name] ) if @schema_name
@@ -99,9 +137,8 @@ module Sequel::Plugins::InlineSchema
 
 		### Defines a table schema (see Schema::CreateTableGenerator for more information).
 		###
-		### This is only needed if you want to use the create_table/create_table! methods.
-		### Will also set the dataset if you provide a name, as well as setting
-		### the primary key if you defined one in the passed block.
+		### This will also set the dataset if you provide a +name+, as well as setting
+		### the primary key if you define one in the passed block.
 		###
 		### Since this plugin allows you to declare the schema inline with the model
 		### class that acts as its interface, the table will not always exist when the
