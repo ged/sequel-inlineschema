@@ -1,13 +1,10 @@
 # sequel-inline_schema
 
 home
-: http://deveiate.org/projects/sequel-inline_schema
-
-code
-: http://bitbucket.org/ged/sequel-inline_schema
+: http://bitbucket.org/ged/sequel-inlineschema
 
 github
-: https://github.com/ged/sequel-inline_schema
+: https://github.com/ged/sequel-inlineschema
 
 docs
 : http://deveiate.org/code/sequel-inline_schema
@@ -83,6 +80,6 @@ Copyright (c) 2017, Michael Granger
 
 
 
-[bitbucket]: http://bitbucket.org/ged/sequel-inline_schema
-[github]: https://github.com/ged/sequel-inline_schema
+[bitbucket]: http://bitbucket.org/ged/sequel-inlineschema
+[github]: https://github.com/ged/sequel-inlineschema
 
