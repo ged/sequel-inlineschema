@@ -10,9 +10,6 @@ require 'sequel'
 # similar to Database#create_table), and use Model.create_table to create a
 # table using the schema information.
 #
-# The inline schema is declared either by calling `set_schema` on the class or
-# passing a schema-declaration block to the `create_table` method.
-#
 # ## Usage
 #
 # There are several ways to use this plugin.

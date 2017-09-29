@@ -10,75 +10,101 @@ Sequel.extension( :migration )
 # directly in the class declaration. It uses the `inline_schema` plugin
 # internally, and will add it for you if necessary.
 #
-# == Example
+# ## Example
 #
 # Define a base (abstract) model class:
 #
-#   # lib/acme/model.rb
-#   module Acme
-#       Model = Class.new( Sequel::Model )
-#       Model.def_Model( Acme )
+# ```
+# # lib/acme/model.rb
+# module Acme
+#     Model = Class.new( Sequel::Model )
+#     Model.def_Model( Acme )
 #
-#       plugin :inline_schema
-#       plugin :inline_migrations
-#   end
+#     class Model
+#         plugin :inline_schema
+#         plugin :inline_migrations
+#     end
+# end
+# ```
 #
 # Defining a model class with two migrations:
 #
-#   # lib/acme/vendor.rb
+# ```
+# # lib/acme/vendor.rb
+# require 'acme/model'
 #
-#   require 'acme/model'
+# class Acme::Vendor < Acme::Model( :vendor )
 #
-#   class Acme::Vendor < Acme::Model( :vendor )
+#     # The schema should always be kept up-to-date. I.e., it should be
+#     # modified along with each migration to reflect the state of the table
+#     # after the migration is applied.
+#     set_schema do
+#         primary_key :id
+#         String :name
+#         String :contact
+#         timestamp :created_at, :null => false
+#         timestamp :updated_at
 #
-#       # The schema should always be kept up-to-date. I.e., it should be
-#       # modified along with each migration to reflect the state of the table
-#       # after the migration is applied.
-#       set_schema do
-#           primary_key :id
-#           String :name
-#           String :contact
-#           timestamp :created_at, :null => false
-#           timestamp :updated_at
+#         add_index :name
+#     end
 #
-#           add_index :name
-#       end
+#     # Similar to Sequel's TimeStampMigrator, inline migrations have a symbolic
+#     # name, which is how they're tracked in the migrations table, and how
+#     # they're ordered when they're applied. The second argument is a human-readable
+#     # description that can be used for automated change control descriptions or
+#     # other tooling.
+#     migration( '20110228_1115_add_timestamps', "Add timestamp fields" ) do
+#         change do
+#             alter_table do
+#                 add_column :created_at, :timestamp, :null => false
+#                 add_column :updated_at, :timestamp
+#             end
+#             update( :created_at => :now[] )
+#         end
+#     end
 #
-#       # Similar to Sequel's TimeStampMigrator, inline migrations have a symbolic
-#       # name, which is how they're tracked in the migrations table, and how
-#       # they're ordered when they're applied. The second argument is a human-readable
-#       # description that can be used for automated change control descriptions or
-#       # other tooling.
-#       migration( '20110228_1115_add_timestamps', "Add timestamp fields" ) do
-#           change do
-#               alter_table do
-#                   add_column :created_at, :timestamp, :null => false
-#                   add_column :updated_at, :timestamp
-#               end
-#               update( :created_at => :now[] )
-#           end
-#       end
+#     migration( '20110303_1751_index_name', "Add an index to the name field" ) do
+#         change do
+#             alter_table do
+#                 add_index :name
+#             end
+#         end
+#     end
 #
-#       migration( '20110303_1751_index_name', "Add an index to the name field" ) do
-#           change do
-#               alter_table do
-#                   add_index :name
-#               end
-#           end
-#       end
-#
-#   end
+# end
+# ```
 #
 # Apply pending migrations.
 #
-#   # bin/migrate
+# ```
+# # bin/migrate
 #
-#   require 'acme/model'
-#   require 'acme/vendor'
-#   # ...
+# require 'acme/model'
+# require 'acme/vendor'
+# # ...
 #
-#   puts "Creating new tables, applying any pending migrations..."
-#   Acme::Model.migrate
+# puts "Creating new tables, applying any pending migrations..."
+# Acme::Model.migrate
+# ```
+#
+# ## Notable Model Methods
+#
+# See Sequel::Plugins::InlineSchema::ClassMethods for documentation for the methods the
+# plugin adds to your model class/es.
+#
+# * `migration` -- define a migration
+# * `migrate` -- create any missing tables for the receiving model and any subclasses,
+#   then run any unapplied migrations.
+#
+# Inline migrations also have model hook methods:
+#
+# * `before_migration`
+# * `after_migration`
+#
+# There's also a method that will return a configured Sequel::Plugins::InlineMigrations::Migrator
+# in case you want to inspect what will happen when you call #migrate:
+#
+# * `migrator`
 #
 module Sequel::Plugins::InlineMigrations
 
@@ -86,7 +112,7 @@ module Sequel::Plugins::InlineMigrations
 	### this model (unless it was already loaded by an ancestor class),
 	### before including/extending any modules, with the arguments and block
 	### provided to the call to Model.plugin.
-	def self::apply( model, *args )
+	def self::apply( model, *args ) # :nodoc:
 		@plugins ||= []
 		model.plugin( :subclasses ) # track subclasses
 		model.plugin( :inline_schema )
@@ -113,6 +139,8 @@ module Sequel::Plugins::InlineMigrations
 
 
 	# Methods to extend Model classes with.
+	#
+	# :markup: RDoc
 	module ClassMethods
 
 		# A Regexp for matching valid migration names
@@ -215,8 +243,8 @@ module Sequel::Plugins::InlineMigrations
 	end # module ClassMethods
 
 
-	### Subclass of Sequel::Migrator that provides the logic for extracting and running
-	### migrations from the model classes themselves.
+	# Subclass of Sequel::Migrator that provides the logic for extracting and running
+	# migrations from the model classes themselves.
 	class Migrator < Sequel::Migrator
 
 		# Default options for .run and #initialize.
@@ -232,26 +260,32 @@ module Sequel::Plugins::InlineMigrations
 		###
 		### The +options+ this method understands:
 		###
-		### [:column]
-		###   The column in the table that stores the migration version. Defaults to
-		###   ':version'.
-		### [:current]
-		###   The current version of the database.  If not given, it is retrieved from the
-		###   database using the :table and :column options.
-		### [:table]
-		###   The name of the migrations table. Defaults to :schema_migrations.
-		### [:target]
-		###   The target version to which to migrate.  If not given, migrates to the maximum version.
+		### column
+		### : The column in the table that stores the migration version. Defaults to
+		### `:version`.
 		###
-		### == Examples
+		### current
+		### : The current version of the database.  If not given, it is retrieved from the
+		### database using the `:table` and `:column` options.
 		###
-		###   # Assuming Acme::Model is a Sequel::Model subclass, and Acme::Vendor is a subclass
-		###   # of that...
-		###   Sequel::InlineMigrations::Migrator.run( Acme::Model )
-		###   Sequel::InlineMigrations::Migrator.run( Acme::Model, :target => 15, :current => 10 )
-		###   Sequel::InlineMigrations::Migrator.run( Acme::Vendor, :column => :app2_version)
-		###   Sequel::InlineMigrations::Migrator.run( Acme::Vendor, :column => :app2_version,
-		###                               :table => :schema_info2 )
+		### table
+		### : The name of the migrations table. Defaults to `:schema_migrations`.
+		###
+		### target
+		### : The target version to migrate to.  If not given, migrates to the
+		### maximum version.
+		###
+		### Examples
+		###
+		### ```
+		### # Assuming Acme::Model is a Sequel::Model subclass, and Acme::Vendor is a subclass
+		### # of that...
+		### Sequel::InlineMigrations::Migrator.run( Acme::Model )
+		### Sequel::InlineMigrations::Migrator.run( Acme::Model, :target => 15, :current => 10 )
+		### Sequel::InlineMigrations::Migrator.run( Acme::Vendor, :column => :app2_version)
+		### Sequel::InlineMigrations::Migrator.run( Acme::Vendor, :column => :app2_version,
+		###                                         :table => :schema_info2 )
+		### ```
 		def self::run( baseclass, db=nil, opts={} )
 			if db.is_a?( Hash )
 				opts = db
