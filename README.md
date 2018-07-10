@@ -27,7 +27,7 @@ Examples and usage documentation are included there.
 
 ## Prerequisites
 
-* Ruby >= 2.3
+* Ruby >= 2.4
 * Sequel >= 5.0
 
 
@@ -76,7 +76,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The rest is licensed under the same terms, but:
 
-Copyright (c) 2017, Michael Granger
+Copyright (c) 2017-2018, Michael Granger
 
 
 

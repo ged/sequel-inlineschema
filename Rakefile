@@ -20,7 +20,7 @@ hoespec = Hoe.spec 'sequel-inline_schema' do |spec|
 	spec.readme_file = 'README.md'
 	spec.history_file = 'History.md'
 	spec.urls = {
-		home:   'http://deveiate.org/projects/sequel-inline_schema',
+		home:   'http://bitbucket.org/ged/sequel-inline_schema',
 		code:   'http://bitbucket.org/ged/sequel-inline_schema',
 		docs:   'http://deveiate.org/code/sequel-inline_schema',
 		github: 'http://github.com/ged/sequel-inline_schema',
@@ -37,7 +37,7 @@ hoespec = Hoe.spec 'sequel-inline_schema' do |spec|
 	spec.dependency 'simplecov',               '~> 0.13', :developer
 	spec.dependency 'rdoc-generator-fivefish', '~> 0.3', :developer
 
-	spec.require_ruby_version( '>=2.3.0' )
+	spec.require_ruby_version( '>=2.4.0' )
 	spec.hg_sign_tags = true if spec.respond_to?( :hg_sign_tags= )
 	spec.check_history_on_release = true if spec.respond_to?( :check_history_on_release= )
 
