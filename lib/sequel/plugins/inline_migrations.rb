@@ -409,7 +409,12 @@ module Sequel::Plugins::InlineMigrations
 			migrations = self.all_migrating_model_classes.
 				collect( &:migrations ).
 				compact.
-				inject {|all, hash| all.merge(hash) }
+				inject do |all, hash|
+					all.merge( hash ) do |key, old, new|
+						# rely on the fact that `up` is user defined even for a change block
+						fail "found duplicate `names` for migrations at #{old.up.source_location[0]} and #{new.up.source_location[0]}"
+					end
+			end
 
 			return migrations.values.sort_by {|m| [m.name, m.model_class.name] }
 		end
