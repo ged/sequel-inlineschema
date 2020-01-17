@@ -1,7 +1,7 @@
 # sequel-inline_schema
 
 home
-: http://bitbucket.org/ged/sequel-inlineschema
+: https://hg.sr.ht/~ged/Sequel-InlineSchema
 
 github
 : https://github.com/ged/sequel-inlineschema
@@ -39,15 +39,20 @@ Examples and usage documentation are included there.
 ## Contributing
 
 You can check out the current development source with Mercurial via its
-[project page][bitbucket]. Or if you prefer Git, via [its Github
+[project page][sourcehut]. Or if you prefer Git, via [its Github
 mirror][github].
 
 After checking out the source, run:
 
-    $ rake newb
+    $ rake setup
 
-This task will install any missing dependencies, run the tests/specs,
-and generate the API documentation.
+This task will install any missing dependencies, and do any other necessary
+setup to start development.
+
+
+## Authors
+
+- Michael Granger <ged@faeriemud.org>
 
 
 ## License
@@ -76,10 +81,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The rest is licensed under the same terms, but:
 
-Copyright (c) 2017-2018, Michael Granger
+Copyright (c) 2017-2020, Michael Granger
 
 
-
-[bitbucket]: http://bitbucket.org/ged/sequel-inlineschema
+[sourcehut]: https://hg.sr.ht/~ged/Sequel-InlineSchema
 [github]: https://github.com/ged/sequel-inlineschema
 

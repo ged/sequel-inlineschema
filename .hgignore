@@ -2,3 +2,4 @@ ChangeLog
 pkg/
 doc/
 coverage/
+\.lock$
