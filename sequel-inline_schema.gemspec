@@ -1,14 +1,14 @@
 # -*- encoding: utf-8 -*-
-# stub: sequel-inline_schema 0.1.0.pre.20200117155123 ruby lib
+# stub: sequel-inline_schema 0.3.0.pre.20200119000630 ruby lib
 
 Gem::Specification.new do |s|
   s.name = "sequel-inline_schema".freeze
-  s.version = "0.1.0.pre.20200117155123"
+  s.version = "0.3.0.pre.20200119000630"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1".freeze) if s.respond_to? :required_rubygems_version=
   s.require_paths = ["lib".freeze]
   s.authors = ["Michael Granger".freeze]
-  s.date = "2020-01-17"
+  s.date = "2020-01-19"
   s.description = "This is a set of plugins for Sequel for declaring a model's table schema and\nany migrations in the class itself (similar to the legacy <code>schema</code> plugin).".freeze
   s.email = ["ged@faeriemud.org".freeze]
   s.files = [".document".freeze, ".rdoc_options".freeze, ".simplecov".freeze, "History.md".freeze, "LICENSE.txt".freeze, "README.md".freeze, "Rakefile".freeze, "lib/sequel/inline_schema.rb".freeze, "lib/sequel/plugins/inline_migrations.rb".freeze, "lib/sequel/plugins/inline_schema.rb".freeze, "spec/sequel/plugins/inline_migrations_spec.rb".freeze, "spec/sequel/plugins/inline_schema_spec.rb".freeze, "spec/spec_helper.rb".freeze]
@@ -24,11 +24,13 @@ Gem::Specification.new do |s|
 
   if s.respond_to? :add_runtime_dependency then
     s.add_runtime_dependency(%q<sequel>.freeze, ["~> 5.0"])
+    s.add_development_dependency(%q<pg>.freeze, ["~> 1.2"])
     s.add_development_dependency(%q<rake-deveiate>.freeze, ["~> 0.5"])
     s.add_development_dependency(%q<simplecov>.freeze, ["~> 0.13"])
     s.add_development_dependency(%q<rdoc-generator-fivefish>.freeze, ["~> 0.3"])
   else
     s.add_dependency(%q<sequel>.freeze, ["~> 5.0"])
+    s.add_dependency(%q<pg>.freeze, ["~> 1.2"])
     s.add_dependency(%q<rake-deveiate>.freeze, ["~> 0.5"])
     s.add_dependency(%q<simplecov>.freeze, ["~> 0.13"])
     s.add_dependency(%q<rdoc-generator-fivefish>.freeze, ["~> 0.3"])
