@@ -22,6 +22,11 @@ describe Sequel::Plugins::InlineSchema do
 		name.to_sym
 	end
 
+	let( :view ) do
+		name = "test_view_%s" % [ SecureRandom.hex(8) ]
+		name.to_sym
+	end
+
 	let( :model_class ) do
 		mclass = Class.new( Sequel::Model )
 		mclass.set_dataset( db[table] )
@@ -85,7 +90,7 @@ describe Sequel::Plugins::InlineSchema do
 			when /CREATE TABLE/
 				created = true
 			else
-				fail "Unhandled query"
+				fail "Unhandled query %p" % [ query ]
 			end
 		end
 	end
@@ -130,7 +135,6 @@ describe Sequel::Plugins::InlineSchema do
 		model_class.create_table!
 
 		expect( db.sqls ).to include(
-			%{DROP TABLE IF EXISTS "#{table}"},
 			%{CREATE TABLE "#{table}" ("id" serial PRIMARY KEY, "name" text, "age" integer)}
 		)
 	end
@@ -176,6 +180,26 @@ describe Sequel::Plugins::InlineSchema do
 	it "allows a model to drop its table" do
 		model_class.drop_table
 		expect( db.sqls ).to include( %{DROP TABLE "#{table}"} )
+	end
+
+
+	let ( :view_dataset ) { model_class.dataset.group_and_count( :age ) }
+
+	let( :view_class ) do
+		view_class = Class.new( Sequel::Model(view) )
+		view_class.plugin( :inline_schema )
+		view_class.set_view_dataset { view_dataset }
+		return view_class
+	end
+
+
+	it "allows a model to create a view instead of a table" do
+		db.fetch = fake_db_fetcher
+		view_class.create_view
+
+		expect( db.sqls ).to include(
+			%{CREATE VIEW "#{view}" AS SELECT "age", count(*) AS "count" FROM "#{table}" GROUP BY "age"}
+		)
 	end
 
 

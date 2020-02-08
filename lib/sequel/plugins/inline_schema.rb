@@ -100,66 +100,20 @@ module Sequel::Plugins::InlineSchema
 	# Sequel plugin API -- add these methods to model classes which load the plugin.
 	module ClassMethods
 
-		### Creates table, using the column information from set_schema.
-		def create_table( *args, &block )
-			self.set_schema( *args, &block ) if block
-			self.before_create_table
-			self.db.create_table( self.table_name, generator: self.schema )
-			@db_schema = get_db_schema( true )
-			self.after_create_table
-			return self.columns
-		end
+		### Extension callback -- add some class instance variables to keep track of
+		### schema info.
+		def self::extended( model_class )
+			super
 
+			model_class.require_valid_table = false
 
-		### Drops the table if it exists and then runs create_table.  Should probably
-		### not be used except in testing.
-		def create_table!( *args, &block )
-			self.drop_table?
-			return self.create_table( *args, &block )
-		end
+			# The Sequel::Dataset used to create the model's view (if it's modelling a view
+			# instead of a table). Setting this causes the model's schema to be ignored when
+			# its table is created, creating a view by the same name instead.
+			model_class.singleton_class.attr_accessor( :view_dataset )
 
-
-		### Creates the table unless the table already exists
-		def create_table?( *args, &block )
-			self.create_table( *args, &block ) unless self.table_exists?
-		end
-
-
-		### Called before the table is created.
-		def before_create_table
-			# No-op
-		end
-
-
-		### Called after the table is created.
-		def after_create_table
-			# No-op
-		end
-
-
-		### Drops table. If the table doesn't exist, this will probably raise an error.
-		def drop_table
-			self.before_drop_table
-			self.db.drop_table( self.table_name )
-			self.after_drop_table
-		end
-
-
-		### Drops table if it already exists, do nothing if it doesn't exist.
-		def drop_table?
-			self.db.drop_table?( self.table_name )
-		end
-
-
-		### Called before the table is dropped.
-		def before_drop_table
-			# No-op
-		end
-
-
-		### Called after the table is dropped.
-		def after_drop_table
-			# No-op
+			# The options used when creating the view for the model.
+			model_class.singleton_class.attr_accessor( :view_options )
 		end
 
 
@@ -191,11 +145,131 @@ module Sequel::Plugins::InlineSchema
 		end
 
 
+		#
+		# Table utilities
+		#
+
+		### Creates table, using the column information from set_schema.
+		def create_table( *args, &block )
+			self.set_schema( *args, &block ) if block
+			self.before_create_table
+			self.db.create_table( self.table_name, generator: self.schema )
+			@db_schema = get_db_schema( true )
+			self.after_create_table
+			return self.columns
+		end
+
+
+		### Drops the table if it exists and then runs create_table.  Should probably
+		### not be used except in testing.
+		def create_table!( *args, &block )
+			self.drop_table?
+			return self.create_table( *args, &block )
+		end
+
+
+		### Creates the table unless the table already exists
+		def create_table?( *args, &block )
+			self.create_table( *args, &block ) unless self.table_exists?
+		end
+
+
+		### Drops table. If the table doesn't exist, this will probably raise an error.
+		def drop_table
+			self.before_drop_table
+			self.db.drop_table( self.table_name )
+			self.after_drop_table
+		end
+
+
+		### Drops table if it already exists, do nothing.
+		def drop_table?
+			self.drop_table if self.table_exists?
+		end
+
+
 		### Returns true if table exists, false otherwise.
 		def table_exists?
 			return self.db.table_exists?( self.table_name )
 		end
 
+
+		### Set the dataset to use for the model to +ds+. If a +block+ is provided, it will be
+		### called with the specified +ds+, and should return the modified dataset to use. Any
+		### +options+ that are given will be passed to Sequel::Database#create_or_replace_view
+		def set_view_dataset( ds=nil, **options ) # :yield: ds
+			ds = yield( ds ) if block_given?
+
+			self.view_dataset = ds
+			self.view_options = options
+		end
+
+
+		### Create the view for this model class.
+		def create_view( options={} )
+			dataset = self.view_dataset or raise "No view declared for this model."
+			options = self.view_options.merge( options )
+
+			self.db.create_view( self.table_name, dataset, options )
+		end
+
+
+		### Drops the view if it exists and then runs #create_view.
+		def create_view!( options={} )
+			self.drop_view?
+			return self.create_view
+		end
+
+
+		### Creates the view unless it already exists.
+		def create_view?( options={} )
+			self.create_view( options ) unless self.view_exists?
+		end
+
+
+		### Refresh the view for this model class. This can only
+		### be called on materialized views.
+		def refresh_view
+			self.db.refresh_view( self.table_name )
+		end
+
+
+		### Drop the view backing this model.
+		def drop_view
+			self.before_drop_view
+			self.db.drop_view( self.table_name )
+			self.after_drop_view
+		end
+
+
+		### Drop the view if it already exists, otherwise do nothing.
+		def drop_view?
+			self.drop_view if self.view_exists?
+		end
+
+
+		### Returns true if the view associated with this model exists, false otherwise.
+		def view_exists?
+			# Make shortcuts for fully-qualified names
+			class_table = Sequel[:pg_catalog][:pg_class].as( :c )
+			ns_table = Sequel[:pg_catalog][:pg_namespace].as( :n )
+			is_visible = Sequel[:pg_catalog][:pg_table_is_visible]
+
+			ds = db[ class_table ].
+				join( ns_table, oid: :relnamespace )
+			ds = ds.where( Sequel[:c][:relkind] => ['v', 'm'] ).
+				exclude( Sequel[:n][:nspname] => /^pg_toast/ ).
+				where( Sequel[:c][:relname] => self.table_name ).
+				where( Sequel.function(is_visible, Sequel[:c][:oid]) )
+
+			return ds.count == 1
+		end
+
+
+
+		#
+		# Hooks
+		#
 
 		### Table-creation hook; called on a model class before its table is created.
 		def before_create_table
@@ -209,15 +283,68 @@ module Sequel::Plugins::InlineSchema
 		end
 
 
-		### Return an Array of model table names that don't yet exist, in the order they
+		### View-creation hook; called before the backing view is created.
+		def before_create_view
+			return true
+		end
+
+
+		### View-creation hook; called after the backing view is created.
+		def after_create_view
+			return true
+		end
+
+
+		### Table-drop hook; called before the table is dropped.
+		def before_drop_table
+			return true
+		end
+
+
+		### Table-drop hook; called after the table is dropped.
+		def after_drop_table
+			return true
+		end
+
+
+		### View-creation hook; called before the backing view is created.
+		def before_create_view
+			return true
+		end
+
+
+		### View-creation hook; called after the backing view is created.
+		def after_create_view
+			return true
+		end
+
+
+		#
+		# Schema-state introspection
+		#
+
+		### Return an Array of model classes whose tables don't yet exist, in the order they
 		### need to be created to satisfy foreign key constraints.
 		def uninstalled_tables
 			self.db.log_info "  searching for unbacked model classes..."
 
 			self.tsort.find_all do |modelclass|
-				next unless modelclass.name && modelclass.name != ''
+				next unless modelclass.name && modelclass.name != '' && !modelclass.is_view_class?
 				!modelclass.table_exists?
 			end.uniq( &:table_name )
+		end
+
+
+		### Return an Array of model classes whose views don't yet exist, in the order
+		### they need to be created.
+		def uninstalled_views
+			return self.tsort.find_all( &:is_view_class? ).reject( &:table_exists? )
+		end
+
+
+		### Returns +true+ if the receiver is defined via a view rather than a table.
+		def is_view_class?
+			return self.respond_to?( :view_dataset ) && self.view_dataset ? true : false
 		end
 
 
@@ -275,6 +402,16 @@ module Sequel::Plugins::InlineSchema
 			end
 		end
 
+
+		### Returns the raw sql for creating a view. Overriden to support creating a
+		### materialized view without populating the table
+		def create_view_sql( name, source, options )
+			sql = super
+
+			sql << " WITH NO DATA" if options[:materialized]
+
+			return sql
+		end
 
 	end # module ClassMethods
 

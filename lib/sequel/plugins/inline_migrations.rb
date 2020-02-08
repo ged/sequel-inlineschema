@@ -212,6 +212,7 @@ module Sequel::Plugins::InlineMigrations
 			end
 		end
 
+
 		### Create any new tables and run any pending migrations. If the optional +target+ is
 		### supplied, the migrations up to (and including) that one will be applied. If
 		### it has already been applied, any from the currently-applied one to it
@@ -220,6 +221,8 @@ module Sequel::Plugins::InlineMigrations
 			migrator = self.migrator( target )
 			classes_to_install = self.uninstalled_tables
 			self.db.log_info "Classes with tables that need to be installed: %p" % [ classes_to_install ]
+			views_to_install = self.uninstalled_views
+			self.db.log_info "Views to install: %p" % [ views_to_install.map(&:table_name) ]
 
 			self.db.transaction do
 				self.before_migration
@@ -229,6 +232,9 @@ module Sequel::Plugins::InlineMigrations
 				self.db.log_info "Running any pending migrations..."
 				migrator.run
 				self.after_migration
+
+				self.db.log_info "(Re)-creating any modeled views..."
+				views_to_install.each( &:create_view )
 			end
 		end
 
@@ -476,5 +482,6 @@ module Sequel::Plugins::InlineMigrations
 		end
 
 	end # class Migrator
+
 
 end # Sequel::Plugins::InlineMigrations
