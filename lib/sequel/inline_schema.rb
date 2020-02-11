@@ -7,7 +7,7 @@ require 'sequel/plugins/inline_schema'
 module Sequel::InlineSchema
 
 	# Package version
-	VERSION = '0.2.0'
+	VERSION = '0.3.0'
 
 	# Version control revision
 	REVISION = %q$Revision$

@@ -2,6 +2,13 @@
 
 ---
 
+## v0.3.0 [2020-02-10] Michael Granger <ged@faeriemud.org>
+
+Improvements:
+
+- Add inline view declaration
+
+
 ## v0.2.0 [2020-01-18] Michael Granger <ged@faeriemud.org>
 
 Improvements:
