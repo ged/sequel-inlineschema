@@ -198,7 +198,7 @@ describe Sequel::Plugins::InlineSchema do
 		view_class.create_view
 
 		expect( db.sqls ).to include(
-			%{CREATE OR REPLACE VIEW "#{view}" AS SELECT "age", count(*) AS "count" FROM "#{table}" GROUP BY "age"}
+			%{CREATE VIEW "#{view}" AS SELECT "age", count(*) AS "count" FROM "#{table}" GROUP BY "age"}
 		)
 	end
 
@@ -215,7 +215,7 @@ describe Sequel::Plugins::InlineSchema do
 		materialized_view_class.create_view
 
 		expect( db.sqls ).to include(
-			%{CREATE OR REPLACE MATERIALIZED VIEW "#{view}" AS SELECT "age", count(*) AS "count" } +
+			%{CREATE MATERIALIZED VIEW "#{view}" AS SELECT "age", count(*) AS "count" } +
 			%{FROM "#{table}" GROUP BY "age"}
 		)
 	end

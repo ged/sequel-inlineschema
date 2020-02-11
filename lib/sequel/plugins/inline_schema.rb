@@ -211,7 +211,7 @@ module Sequel::Plugins::InlineSchema
 			options = self.view_options.merge( options )
 
 			self.db.log_info "Creating view %s(%p): %s" % [ self.table_name, options, dataset.sql ]
-			self.db.create_or_replace_view( self.table_name, dataset, options )
+			self.db.create_view( self.table_name, dataset, options )
 		end
 
 
