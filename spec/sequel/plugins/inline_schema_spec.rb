@@ -34,6 +34,8 @@ describe Sequel::Plugins::InlineSchema do
 		mclass
 	end
 
+	let ( :view_dataset ) { model_class.dataset.group_and_count( :age ) }
+
 	let( :valid_pg_attributes ) do
 		[
 			{
@@ -183,22 +185,38 @@ describe Sequel::Plugins::InlineSchema do
 	end
 
 
-	let ( :view_dataset ) { model_class.dataset.group_and_count( :age ) }
-
-	let( :view_class ) do
-		view_class = Class.new( Sequel::Model(view) )
-		view_class.plugin( :inline_schema )
-		view_class.set_view_dataset { view_dataset }
-		return view_class
-	end
-
 
 	it "allows a model to create a view instead of a table" do
+		view_class = Class.new( Sequel::Model )
+		view_class.plugin( :inline_schema )
+		view_class.set_dataset( db[view] )
+		view_class.set_view_dataset { view_dataset.naked }
+
 		db.fetch = fake_db_fetcher
+		db.sqls.clear
+
 		view_class.create_view
 
 		expect( db.sqls ).to include(
-			%{CREATE VIEW "#{view}" AS SELECT "age", count(*) AS "count" FROM "#{table}" GROUP BY "age"}
+			%{CREATE OR REPLACE VIEW "#{view}" AS SELECT "age", count(*) AS "count" FROM "#{table}" GROUP BY "age"}
+		)
+	end
+
+
+	it "allows a model to craete a materialized view instead of a table" do
+		materialized_view_class = Class.new( Sequel::Model )
+		materialized_view_class.plugin( :inline_schema )
+		materialized_view_class.set_dataset( db[view] )
+		materialized_view_class.set_view_dataset( materialized: true ) { view_dataset.naked }
+
+		db.fetch = fake_db_fetcher
+		db.sqls.clear
+
+		materialized_view_class.create_view
+
+		expect( db.sqls ).to include(
+			%{CREATE OR REPLACE MATERIALIZED VIEW "#{view}" AS SELECT "age", count(*) AS "count" } +
+			%{FROM "#{table}" GROUP BY "age"}
 		)
 	end
 

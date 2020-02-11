@@ -210,7 +210,8 @@ module Sequel::Plugins::InlineSchema
 			dataset = self.view_dataset or raise "No view declared for this model."
 			options = self.view_options.merge( options )
 
-			self.db.create_view( self.table_name, dataset, options )
+			self.db.log_info "Creating view %s(%p): %s" % [ self.table_name, options, dataset.sql ]
+			self.db.create_or_replace_view( self.table_name, dataset, options )
 		end
 
 
@@ -400,17 +401,6 @@ module Sequel::Plugins::InlineSchema
 
 				yield( associated_class ) if config[:type] == :many_to_one
 			end
-		end
-
-
-		### Returns the raw sql for creating a view. Overriden to support creating a
-		### materialized view without populating the table
-		def create_view_sql( name, source, options )
-			sql = super
-
-			sql << " WITH NO DATA" if options[:materialized]
-
-			return sql
 		end
 
 	end # module ClassMethods
