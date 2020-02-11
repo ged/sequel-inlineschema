@@ -34,7 +34,23 @@ describe Sequel::Plugins::InlineSchema do
 		mclass
 	end
 
-	let ( :view_dataset ) { model_class.dataset.group_and_count( :age ) }
+	let( :view_dataset ) { model_class.dataset.group_and_count( :age ) }
+
+	let( :view_class ) do
+		view_class = Class.new( Sequel::Model )
+		view_class.plugin( :inline_schema )
+		view_class.set_dataset( db[view] )
+		view_class.set_view_dataset { view_dataset.naked }
+		return view_class
+	end
+
+	let( :materialized_view_class ) do
+		materialized_view_class = Class.new( Sequel::Model )
+		materialized_view_class.plugin( :inline_schema )
+		materialized_view_class.set_dataset( db[view] )
+		materialized_view_class.set_view_dataset( materialized: true ) { view_dataset.naked }
+		return materialized_view_class
+	end
 
 	let( :valid_pg_attributes ) do
 		[
@@ -187,11 +203,6 @@ describe Sequel::Plugins::InlineSchema do
 
 
 	it "allows a model to create a view instead of a table" do
-		view_class = Class.new( Sequel::Model )
-		view_class.plugin( :inline_schema )
-		view_class.set_dataset( db[view] )
-		view_class.set_view_dataset { view_dataset.naked }
-
 		db.fetch = fake_db_fetcher
 		db.sqls.clear
 
@@ -204,11 +215,6 @@ describe Sequel::Plugins::InlineSchema do
 
 
 	it "allows a model to craete a materialized view instead of a table" do
-		materialized_view_class = Class.new( Sequel::Model )
-		materialized_view_class.plugin( :inline_schema )
-		materialized_view_class.set_dataset( db[view] )
-		materialized_view_class.set_view_dataset( materialized: true ) { view_dataset.naked }
-
 		db.fetch = fake_db_fetcher
 		db.sqls.clear
 
@@ -217,6 +223,30 @@ describe Sequel::Plugins::InlineSchema do
 		expect( db.sqls ).to include(
 			%{CREATE MATERIALIZED VIEW "#{view}" AS SELECT "age", count(*) AS "count" } +
 			%{FROM "#{table}" GROUP BY "age"}
+		)
+	end
+
+
+	it "allows a model to drop its view" do
+		db.fetch = fake_db_fetcher
+		db.sqls.clear
+
+		view_class.drop_view
+
+		expect( db.sqls ).to include(
+			%{DROP VIEW "#{view}"}
+		)
+	end
+
+
+	it "allows a model to drop its materialized view" do
+		db.fetch = fake_db_fetcher
+		db.sqls.clear
+
+		materialized_view_class.drop_view
+
+		expect( db.sqls ).to include(
+			%{DROP MATERIALIZED VIEW "#{view}"}
 		)
 	end
 
@@ -308,7 +338,7 @@ describe Sequel::Plugins::InlineSchema do
 	end
 
 
-	describe "hooks" do
+	describe "table hooks" do
 
 		let( :model_class ) do
 			class_obj = super()
@@ -435,6 +465,138 @@ describe Sequel::Plugins::InlineSchema do
 			model_class.drop_table
 
 			expect( model_class.called ).to include( :after_drop_table )
+		end
+
+	end
+
+
+	describe "view hooks" do
+
+		let( :view_class ) do
+			class_obj = super()
+			class_obj.singleton_class.send( :attr_accessor, :called )
+			class_obj.called = {}
+			class_obj
+		end
+
+
+		it "calls a hook before creating the model's view" do
+			def view_class.before_create_view
+				self.called[ :before_create_view ] = true
+				super
+			end
+
+			view_class.create_view
+
+			expect( view_class.called ).to include( :before_create_view )
+		end
+
+
+		it "allows cancellation of create_view from the before_create_view hook" do
+			def view_class.before_create_view
+				self.called[ :before_create_view ] = true
+				cancel_action
+			end
+
+			expect {
+				view_class.create_view
+			}.to raise_error( Sequel::HookFailed, /hook failed/i )
+		end
+
+
+		it "allows cancellation of create_view with a message from the before_create_view hook" do
+			def view_class.before_create_view
+				self.called[ :before_create_view ] = true
+				cancel_action( "Wait, don't create yet!" )
+			end
+
+			expect {
+				view_class.create_view
+			}.to raise_error( Sequel::HookFailed, "Wait, don't create yet!" )
+		end
+
+
+		it "allows cancellation of create_view with a Symbol from the before_create_view hook" do
+			def view_class.before_create_view
+				self.called[ :before_create_view ] = true
+				cancel_action( :before_create_view )
+			end
+
+			expect {
+				view_class.create_view
+			}.to raise_error( Sequel::HookFailed, /before_create_view/ )
+		end
+
+
+		it "calls a hook after view creation" do
+			def view_class.after_create_view
+				super
+				self.called[ :after_create_view ] = true
+			end
+
+			view_class.create_view
+
+			expect( view_class.called ).to include( :after_create_view )
+		end
+
+
+		it "calls a hook before dropping the model's view" do
+			def view_class.before_drop_view
+				self.called[ :before_drop_view ] = true
+				super
+			end
+
+			view_class.drop_view
+
+			expect( view_class.called ).to include( :before_drop_view )
+		end
+
+
+		it "allows cancellation of drop_view from the before_drop_view hook" do
+			def view_class.before_drop_view
+				self.called[ :before_drop_view ] = true
+				cancel_action
+			end
+
+			expect {
+				view_class.drop_view
+			}.to raise_error( Sequel::HookFailed, /hook failed/i )
+		end
+
+
+		it "allows cancellation of drop_view with a message from the before_drop_view hook" do
+			def view_class.before_drop_view
+				self.called[ :before_drop_view ] = true
+				cancel_action( "Wait, don't drop yet!" )
+			end
+
+			expect {
+				view_class.drop_view
+			}.to raise_error( Sequel::HookFailed, "Wait, don't drop yet!" )
+		end
+
+
+		it "allows cancellation of drop_view with a Symbol from the before_drop_view hook" do
+			def view_class.before_drop_view
+				self.called[ :before_drop_view ] = true
+				cancel_action( :before_drop_view )
+			end
+
+			expect {
+				view_class.drop_view
+			}.to raise_error( Sequel::HookFailed, /before_drop_view/ )
+		end
+
+
+		it "calls a hook after a class's view is dropped" do
+			def view_class.after_drop_view
+				super
+				self.called[ :after_drop_view ] = true
+			end
+
+			view_class.drop_view
+
+			expect( view_class.called ).to include( :after_drop_view )
 		end
 
 	end

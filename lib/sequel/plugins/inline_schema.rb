@@ -210,8 +210,11 @@ module Sequel::Plugins::InlineSchema
 			dataset = self.view_dataset or raise "No view declared for this model."
 			options = self.view_options.merge( options )
 
+			self.before_create_view
 			self.db.log_info "Creating view %s(%p): %s" % [ self.table_name, options, dataset.sql ]
 			self.db.create_view( self.table_name, dataset, options )
+			@db_schema = get_db_schema( true )
+			self.after_create_view
 		end
 
 
@@ -236,16 +239,16 @@ module Sequel::Plugins::InlineSchema
 
 
 		### Drop the view backing this model.
-		def drop_view
+		def drop_view( options={} )
 			self.before_drop_view
-			self.db.drop_view( self.table_name )
+			self.db.drop_view( self.table_name, self.view_options.merge(options) )
 			self.after_drop_view
 		end
 
 
 		### Drop the view if it already exists, otherwise do nothing.
-		def drop_view?
-			self.drop_view if self.view_exists?
+		def drop_view?( options={} )
+			self.drop_view( options ) if self.view_exists?
 		end
 
 
@@ -316,6 +319,18 @@ module Sequel::Plugins::InlineSchema
 
 		### View-creation hook; called after the backing view is created.
 		def after_create_view
+			return true
+		end
+
+
+		### View-drop hook; called before the backing view is dropped.
+		def before_drop_view
+			return true
+		end
+
+
+		### View-drop hook; called after the backing view is dropped.
+		def after_drop_view
 			return true
 		end
 
