@@ -2,6 +2,13 @@
 
 ---
 
+## v0.3.1 [2020-02-11] Michael Granger <ged@faeriemud.org>
+
+Bugfixes:
+
+- Change back to using `create_view`
+
+
 ## v0.3.0 [2020-02-10] Michael Granger <ged@faeriemud.org>
 
 Improvements:
