@@ -2,6 +2,13 @@
 
 ---
 
+## v0.3.2 [2020-02-11] Michael Granger <ged@faeriemud.org>
+
+Bugfixes:
+
+- Fixed view hooks and added specs.
+
+
 ## v0.3.1 [2020-02-11] Michael Granger <ged@faeriemud.org>
 
 Bugfixes:
