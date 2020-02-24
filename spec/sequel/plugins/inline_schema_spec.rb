@@ -201,6 +201,11 @@ describe Sequel::Plugins::InlineSchema do
 	end
 
 
+	it "allows a model to pass options when dropping its table" do
+		model_class.drop_table( cascade: true )
+		expect( db.sqls ).to include( %{DROP TABLE "#{table}" CASCADE} )
+	end
+
 
 	it "allows a model to create a view instead of a table" do
 		db.fetch = fake_db_fetcher
@@ -214,7 +219,7 @@ describe Sequel::Plugins::InlineSchema do
 	end
 
 
-	it "allows a model to craete a materialized view instead of a table" do
+	it "allows a model to create a materialized view instead of a table" do
 		db.fetch = fake_db_fetcher
 		db.sqls.clear
 
@@ -223,6 +228,17 @@ describe Sequel::Plugins::InlineSchema do
 		expect( db.sqls ).to include(
 			%{CREATE MATERIALIZED VIEW "#{view}" AS SELECT "age", count(*) AS "count" } +
 			%{FROM "#{table}" GROUP BY "age"}
+		)
+	end
+
+
+	it "allows a model to determine whether its view exists or not" do
+		view_class.view_exists?
+		statements = db.sqls.dup
+
+		expect( statements.last ).to include( %{WHERE (("c"."relkind" IN ('v', 'm'))} )
+		expect( statements.last ).to include(
+			%{("c"."relname" = '#{view}') AND "pg_catalog"."pg_table_is_visible"("c"."oid")) LIMIT 1}
 		)
 	end
 

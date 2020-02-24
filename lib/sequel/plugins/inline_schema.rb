@@ -175,16 +175,16 @@ module Sequel::Plugins::InlineSchema
 
 
 		### Drops table. If the table doesn't exist, this will probably raise an error.
-		def drop_table
+		def drop_table( opts={} )
 			self.before_drop_table
-			self.db.drop_table( self.table_name )
+			self.db.drop_table( self.table_name, opts )
 			self.after_drop_table
 		end
 
 
 		### Drops table if it already exists, do nothing.
-		def drop_table?
-			self.drop_table if self.table_exists?
+		def drop_table?( opts={} )
+			self.drop_table( opts ) if self.table_exists?
 		end
 
 
@@ -253,17 +253,21 @@ module Sequel::Plugins::InlineSchema
 
 
 		### Returns true if the view associated with this model exists, false otherwise.
+		### :FIXME: This is PostgreSQL-specific, but there doesn't appear to be any
+		### cross-driver way to check for a view.
 		def view_exists?
 			# Make shortcuts for fully-qualified names
 			class_table = Sequel[:pg_catalog][:pg_class].as( :c )
 			ns_table = Sequel[:pg_catalog][:pg_namespace].as( :n )
 			is_visible = Sequel[:pg_catalog][:pg_table_is_visible]
 
+			_, table, _ = Sequel.split_symbol( self.table_name )
+
 			ds = db[ class_table ].
 				join( ns_table, oid: :relnamespace )
 			ds = ds.where( Sequel[:c][:relkind] => ['v', 'm'] ).
 				exclude( Sequel[:n][:nspname] => /^pg_toast/ ).
-				where( Sequel[:c][:relname] => self.table_name ).
+				where( Sequel[:c][:relname] => table.to_s ).
 				where( Sequel.function(is_visible, Sequel[:c][:oid]) )
 
 			return ds.count == 1
