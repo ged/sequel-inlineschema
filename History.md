@@ -2,6 +2,14 @@
 
 ---
 
+## v0.3.3 [2020-02-24] Michael Granger <ged@faeriemud.org>
+
+Bugfixes:
+
+- Allow options to be passed through #drop_table
+- Fix view_exists? query for schema-qualified table names
+
+
 ## v0.3.2 [2020-02-11] Michael Granger <ged@faeriemud.org>
 
 Bugfixes:
