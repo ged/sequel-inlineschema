@@ -221,7 +221,7 @@ module Sequel::Plugins::InlineMigrations
 			migrator = self.migrator( target )
 			classes_to_install = self.uninstalled_tables
 			self.db.log_info "Classes with tables that need to be installed: %p" % [ classes_to_install ]
-			views_to_install = self.uninstalled_views
+			views_to_install = self.installed_views + self.uninstalled_views
 			self.db.log_info "Views to install: %p" % [ views_to_install.map(&:table_name) ]
 
 			self.db.transaction do
@@ -234,7 +234,7 @@ module Sequel::Plugins::InlineMigrations
 				self.after_migration
 
 				self.db.log_info "(Re)-creating any modeled views..."
-				views_to_install.each( &:create_view )
+				views_to_install.each( &:create_view! )
 			end
 		end
 

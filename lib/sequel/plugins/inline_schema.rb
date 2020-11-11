@@ -362,6 +362,13 @@ module Sequel::Plugins::InlineSchema
 		end
 
 
+		### Return an Array of model classes whose views exist, in the order they need to be
+		### created.
+		def installed_views
+			return self.tsort.find_all( &:is_view_class? ).select( &:table_exists? )
+		end
+
+
 		### Returns +true+ if the receiver is defined via a view rather than a table.
 		def is_view_class?
 			return self.respond_to?( :view_dataset ) && self.view_dataset ? true : false
