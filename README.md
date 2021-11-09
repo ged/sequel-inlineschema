@@ -9,6 +9,9 @@ github
 docs
 : http://deveiate.org/code/sequel-inline_schema
 
+code
+: https://hg.sr.ht/~ged/Sequel-InlineSchema/browse
+
 
 ## Description
 
