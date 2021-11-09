@@ -1,6 +1,12 @@
 # Release History for sequel-inline_schema
 
 ---
+## v0.3.4 [2021-11-08] Michael Granger <ged@faeriemud.org>
+
+Improvements:
+
+- Update for Ruby 3, update gem-signing cert.
+
 
 ## v0.3.3 [2020-02-24] Michael Granger <ged@faeriemud.org>
 
