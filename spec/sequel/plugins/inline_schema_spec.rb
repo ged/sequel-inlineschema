@@ -301,6 +301,14 @@ describe Sequel::Plugins::InlineSchema do
 			mclass
 		end
 
+		let!( :sequel_anon_class ) do
+			mclass = Class.new( base_class ) do
+				def self::name; "Sequel::_Model(:anon)"; end
+			end
+			mclass.set_dataset( db[:anon] )
+			mclass
+		end
+
 		let!( :artist_class ) do
 			mclass = Class.new( base_class ) do
 				def self::name; "Artist"; end

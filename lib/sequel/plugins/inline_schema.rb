@@ -349,7 +349,10 @@ module Sequel::Plugins::InlineSchema
 			self.db.log_info "  searching for unbacked model classes..."
 
 			self.tsort.find_all do |modelclass|
-				next unless modelclass.name && modelclass.name != '' && !modelclass.is_view_class?
+				next unless modelclass.name &&
+					modelclass.name != '' &&
+					modelclass.name !~ /^Sequel::_Model/ &&
+					!modelclass.is_view_class?
 				!modelclass.table_exists?
 			end.uniq( &:table_name )
 		end
