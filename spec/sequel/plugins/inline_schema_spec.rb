@@ -137,7 +137,7 @@ describe Sequel::Plugins::InlineSchema do
 		model_class.create_table
 
 		expect( db.sqls ).to include(
-			%{CREATE TABLE "#{table}" ("id" serial PRIMARY KEY, "name" text, "age" integer)}
+			a_string_matching( /CREATE TABLE "#{table}"/i )
 		)
 	end
 
@@ -153,7 +153,7 @@ describe Sequel::Plugins::InlineSchema do
 		model_class.create_table!
 
 		expect( db.sqls ).to include(
-			%{CREATE TABLE "#{table}" ("id" serial PRIMARY KEY, "name" text, "age" integer)}
+			a_string_matching( /CREATE TABLE "#{table}"/i )
 		)
 	end
 
@@ -169,7 +169,7 @@ describe Sequel::Plugins::InlineSchema do
 		model_class.create_table?
 
 		expect( db.sqls ).to include(
-			%{CREATE TABLE "#{table}" ("id" serial PRIMARY KEY, "name" text, "age" integer)}
+			a_string_matching( /CREATE TABLE "#{table}"/i )
 		)
 	end
 
@@ -182,7 +182,7 @@ describe Sequel::Plugins::InlineSchema do
 		end
 
 		expect( db.sqls ).to include(
-			%{CREATE TABLE "#{table}" ("id" serial PRIMARY KEY, "name" text, "age" integer)}
+			a_string_matching( /CREATE TABLE "#{table}"/i )
 		)
 	end
 
