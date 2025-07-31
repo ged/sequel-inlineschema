@@ -1,5 +1,4 @@
 #!/usr/bin/env rspec -cfd
-#encoding: utf-8
 
 require_relative '../../spec_helper'
 
@@ -11,7 +10,7 @@ require 'rspec'
 require 'sequel/plugins/inline_schema'
 
 
-describe Sequel::Plugins::InlineSchema do
+RSpec.describe Sequel::Plugins::InlineSchema do
 
 	let( :db ) do
 		Sequel.mock( host: 'postgres', columns: nil, logger: Loggability.logger )

@@ -7,7 +7,7 @@ require 'sequel/model'
 require 'sequel/inline_schema'
 require 'sequel/plugins/inline_migrations'
 
-describe Sequel::Plugins::InlineMigrations do
+RSpec.describe Sequel::Plugins::InlineMigrations do
 
 	let( :db ) { Sequel.connect('mock://postgres', logger: Loggability[Sequel::InlineSchema]) }
 
