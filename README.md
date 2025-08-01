@@ -47,10 +47,11 @@ mirror][github].
 
 After checking out the source, run:
 
+    $ gem install -Ng
     $ rake setup
 
-This task will install any missing dependencies, and do any other necessary
-setup to start development.
+This will install any missing dependencies, and do any other necessary setup to
+start development.
 
 
 ## Authors
@@ -84,7 +85,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 The rest is licensed under the same terms, but:
 
-Copyright (c) 2017-2020, Michael Granger
+Copyright (c) 2017-2025, Michael Granger
 
 
 [sourcehut]: https://hg.sr.ht/~ged/Sequel-InlineSchema

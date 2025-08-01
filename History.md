@@ -1,6 +1,14 @@
 # Release History for sequel-inline_schema
 
 ---
+## v0.3.5 [2025-07-31] Michael Granger <ged@faeriemud.org>
+
+Bugfixes:
+
+- Update for Sequel >= 5.89's labeling of anonymous classes.
+  Thanks to mahlon@martini.nu for the patch.
+
+
 ## v0.3.4 [2021-11-08] Michael Granger <ged@faeriemud.org>
 
 Improvements:
